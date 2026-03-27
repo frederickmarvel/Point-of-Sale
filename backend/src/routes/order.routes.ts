@@ -11,18 +11,19 @@ import {
 } from '../controllers/order.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { validate } from '../middleware/error.middleware';
+import { adminRateLimiter, orderRateLimiter } from '../middleware/rate-limit.middleware';
 import { param } from 'express-validator';
 
 const router = Router();
 
 // ── Public (Customer) ────────────────────────────────────────────────────────
-router.post('/', placeOrderValidation, validate, placeOrder);
-router.get('/:id', [param('id').isUUID()], validate, getOrder);
+router.post('/', orderRateLimiter, placeOrderValidation, validate, placeOrder);
+router.get('/:id', orderRateLimiter, [param('id').isUUID()], validate, getOrder);
 
 // ── Admin ────────────────────────────────────────────────────────────────────
-router.get('/', authenticate, listOrders);
-router.get('/stats/today', authenticate, getOrderStats);
-router.patch('/:id/status', authenticate, updateOrderStatusValidation, validate, updateOrderStatus);
-router.patch('/:id/cancel', authenticate, [param('id').isUUID()], validate, cancelOrder);
+router.get('/', adminRateLimiter, authenticate, listOrders);
+router.get('/stats/today', adminRateLimiter, authenticate, getOrderStats);
+router.patch('/:id/status', adminRateLimiter, authenticate, updateOrderStatusValidation, validate, updateOrderStatus);
+router.patch('/:id/cancel', adminRateLimiter, authenticate, [param('id').isUUID()], validate, cancelOrder);
 
 export default router;

@@ -12,19 +12,20 @@ import {
 } from '../controllers/table.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { validate } from '../middleware/error.middleware';
+import { adminRateLimiter, orderRateLimiter } from '../middleware/rate-limit.middleware';
 import { param } from 'express-validator';
 
 const router = Router();
 
 // ── Public ──────────────────────────────────────────────────────────────────
-router.get('/:id/public', [param('id').isUUID()], validate, getTableByIdPublic);
+router.get('/:id/public', orderRateLimiter, [param('id').isUUID()], validate, getTableByIdPublic);
 
 // ── Admin ────────────────────────────────────────────────────────────────────
-router.get('/', authenticate, listTables);
-router.get('/:id', authenticate, [param('id').isUUID()], validate, getTable);
-router.post('/', authenticate, createTableValidation, validate, createTable);
-router.patch('/:id', authenticate, updateTableValidation, validate, updateTable);
-router.delete('/:id', authenticate, [param('id').isUUID()], validate, deleteTable);
-router.post('/:id/qr', authenticate, [param('id').isUUID()], validate, regenerateQrCode);
+router.get('/', adminRateLimiter, authenticate, listTables);
+router.get('/:id', adminRateLimiter, authenticate, [param('id').isUUID()], validate, getTable);
+router.post('/', adminRateLimiter, authenticate, createTableValidation, validate, createTable);
+router.patch('/:id', adminRateLimiter, authenticate, updateTableValidation, validate, updateTable);
+router.delete('/:id', adminRateLimiter, authenticate, [param('id').isUUID()], validate, deleteTable);
+router.post('/:id/qr', adminRateLimiter, authenticate, [param('id').isUUID()], validate, regenerateQrCode);
 
 export default router;
